@@ -413,7 +413,19 @@ class Adapter extends \Magento\Framework\Model\AbstractModel
      */
     public function orderStatus($decodedData,$order)
     {
-
+	if ($this->getStockOption() == true) {
+                $items = $order->getAllItems();
+                foreach ($items as $item) {
+                    $productId = $item->getProductId();
+                    $product = $this->_productRepository->getById($productId);
+                    $sku = $product->getSku();
+                    $stockItem = $this->_stockRegistry->getStockItemBySku($sku);
+                    $qty = $stockItem->getQty() - $item->getQtyOrdered();
+                    $stockItem->setQty($qty);
+                    $stockItem->setIsInStock((bool)$qty);
+                    $this->_stockRegistry->updateStockItemBySku($sku, $stockItem);
+                }
+        }
         if (preg_match('/^(000\.400\.0|000\.400\.100)/', $decodedData['result']['code'])
             || preg_match('/^(000\.000\.|000\.100\.1|000\.[36])/', $decodedData['result']['code'])) {
             $order->addStatusHistoryComment($decodedData['result']['description'], false);
