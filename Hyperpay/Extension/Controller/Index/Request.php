@@ -105,6 +105,11 @@ class Request extends \Magento\Framework\App\Action\Action
             $this->messageManager->addError($e->getMessage());
             return $this->_pageFactory->create();
         }
+	if ($this->_adapter->getStockOption() == true) {
+            foreach ($order->getAllItems() as $item) {
+                $this->_stockManagement->backItemQty($item->getProductId(), $item->getQtyOrdered(), $this->_storeScope);
+            }
+        }
         if(($order->getState() !== 'new') && ($order->getState() !== 'pending_payment')) {
             $this->messageManager->addError(__("This order has already been processed,Please place a new order"));
             $resultRedirect = $this->resultRedirectFactory->create();
